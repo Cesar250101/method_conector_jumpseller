@@ -1,0 +1,89 @@
+<odoo>
+  <data>
+
+    <!-- model.name inherit form view -->
+    <record id="method_conector_jumpseller.view_order_form" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.view.order.form</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_order_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='other_information']" position="after">
+          <page name="JumpSeller" string="JumpSeller">
+              <group>
+                <group name="JumpSeller" string="JumpSeller">
+                  <field name="jumpseller_payment_method_name" readonly="1"/>
+                  <field name="jumpseller_status_order" readonly="1"/>
+                  <field name="jumpseller_duplicate_url" readonly="1" widget="url"/>
+                  <field name="jumpseller_order_id" readonly="1"/>
+                  
+                </group>
+              </group>
+          </page>
+        </xpath>
+        
+      </field>
+    </record>
+
+    <!-- model.name inherit form view -->
+    <record id="method_conector_jumpseller.view_partner_form" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.view.partner.form</field>
+      <field name="model">res.partner</field>
+      <field name="inherit_id" ref="base.view_partner_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='sales_purchases']" position="after">
+          <page name="JumpSeller" string="JumpSeller">
+              <group>
+                <group name="JumpSeller" string="JumpSeller">
+                  <field name="jumpseller_custom_id" readonly="1"/>                                 
+                </group>
+              </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- model.name inherit form view -->
+    <record id="method_conector_jumpseller.product_template_only_form_view" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.product.template.only.form_view</field>
+      <field name="model">product.template</field>
+      <field name="inherit_id" ref="product.product_template_only_form_view"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='general_information']" position="after">
+          <page name="JumpSeller" string="JumpSeller" groups="product.group_product_variant">
+              <group>
+                <group name="JumpSeller" string="JumpSeller">
+                  <field name="jumpseller_sku"/>  
+                   <field name="jumpseller_product_id"/>  
+                  <field name="jumpseller_categ"/>   
+                  <field name="jumpseller_img" widget="url"/>   
+                               
+                </group>
+              </group>
+          </page>
+        </xpath>
+        
+      </field>
+    </record>
+
+    <!-- model.name inherit form view -->
+    <record id="method_conector_jumpseller.view_company_form" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.view.company.form</field>
+      <field name="model">res.company</field>
+      <field name="inherit_id" ref="base.view_company_form"/>
+      <field name="arch" type="xml">
+            <xpath expr="//page" position="after">            
+                <page name="jumpseller" string="JumpSeller">
+                  <group>
+                    <group name="jumpseller" string="JumpSeller"> 
+                      <field name="jumpseller_login"/>
+                      <field name="jumpseller_authtoken"/>
+                    </group>
+                  </group>
+                </page>
+            </xpath>
+        
+      </field>
+    </record>
+
+  </data>
+</odoo>
