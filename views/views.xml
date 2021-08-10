@@ -34,7 +34,7 @@
           <page name="JumpSeller" string="JumpSeller">
               <group>
                 <group name="JumpSeller" string="JumpSeller">
-                  <field name="jumpseller_custom_id" readonly="1"/>                                 
+                  <field name="jumpseller_custom_id"/>                                 
                 </group>
               </group>
           </page>
