@@ -192,13 +192,13 @@ class Clientes(models.Model):
             json_datos = respuesta.json()
             json_datos_completo += json_datos
             print("Leyendo página", pagina_actual, "...")
-            for pw in json_datos_completo:
-                custom_id=pw['customer']['id']
-                email=pw['customer']['email']
-                phone=pw['customer']['phone']
-                address=""
+        for pw in json_datos_completo:
+            custom_id=pw['customer']['id']
+            email=pw['customer']['email']
+            phone=pw['customer']['phone']
+            address=""
                 
-                values = {
+            values = {
                                 "name": 'Paso',
                                 #"street":address,
                                 "email": email,
@@ -208,21 +208,22 @@ class Clientes(models.Model):
                                 "type":'contact',   
                                 "jumpseller_custom_id":custom_id,
                             }
-                clientes_1=self.env['res.partner'].search([('email', '=', email),('type','=','contact')],limit=1)
-                if clientes_1:
-                    parent_id=self.write(values)
-                else:
-                    parent_id=self.create(values)
-                if parent_id and parent_id != True:
-                    direccion_facturacion=pw['customer']['billing_addresses']                
-                    i=1
-                    for c in direccion_facturacion:
-                        name=c['name']+" "+c['surname']               
-                        city=c['city']
-                        municipality=c['municipality']
-                        address=c['address'] +" "+c['municipality']                    
-                        type="invoice"
-                        values = {
+            clientes_1=self.env['res.partner'].search([('email', '=', email),('type','=','contact')],limit=1)
+            if clientes_1:
+                parent_id=self.write(values)
+                parent_id=clientes_1
+            else:
+                parent_id=self.create(values)
+            if parent_id and parent_id != True:
+                direccion_facturacion=pw['customer']['billing_addresses']                
+                i=1
+                for c in direccion_facturacion:
+                    name=c['name']+" "+c['surname']               
+                    city=c['city']
+                    municipality=c['municipality']
+                    address=c['address'] +" "+c['municipality']                    
+                    type="invoice"
+                    values = {
                                     "name": name,
                                     "street":address,
                                     "email": email,
@@ -233,30 +234,30 @@ class Clientes(models.Model):
                                     "jumpseller_custom_id":custom_id,
                                     "parent_id":parent_id.id,
                                 }
-                        clientes_all=self.env['res.partner'].search([('street', '=', address)],limit=1)
-                        if clientes_all:                        
-                            cliente_id=self.write(values)   
-                        else:
-                            cliente_id=self.create(values)  
-                        if i==1:
-                            parent=self.env['res.partner'].search([('id','=',parent_id.id)],limit=1)                     
-                            values = {
+                    clientes_all=self.env['res.partner'].search([('street', '=', address)],limit=1)
+                    if clientes_all:                        
+                        cliente_id=self.write(values)   
+                    else:
+                        cliente_id=self.create(values)  
+                    if i==1:
+                        parent=self.env['res.partner'].search([('id','=',parent_id.id)],limit=1)                     
+                        values = {
                                         "name": name,
                                         "street":address,
                                         #"city_id":municipality,
                                         "city":city,
                                     }                        
-                            parent.write(values)
-                        i+=1
-                    direccion_envio=pw['customer']['shipping_addresses']
-                    for c in direccion_envio:
-                        name=c['name']+" "+c['surname']               
-                        city=c['city']
-                        municipality=c['municipality']
-                        address=c['address']+" "+c['municipality']
-                        type="delivery"
-                        clientes_all=self.env['res.partner'].search([('street', '=', address),('type','=','delivery')],limit=1)
-                        values = {
+                        parent.write(values)
+                    i+=1
+                direccion_envio=pw['customer']['shipping_addresses']
+                for c in direccion_envio:
+                    name=c['name']+" "+c['surname']               
+                    city=c['city']
+                    municipality=c['municipality']
+                    address=c['address']+" "+c['municipality']
+                    type="delivery"
+                    clientes_all=self.env['res.partner'].search([('street', '=', address),('type','=','delivery')],limit=1)
+                    values = {
                                     "name": name,
                                     "street":address,
                                     "email": email,
@@ -269,10 +270,10 @@ class Clientes(models.Model):
                                     "parent_id":parent_id.id,
                                 }
 
-                        if clientes_all:                            
-                            cliente_id=self.write(values)   
-                        else:
-                            cliente_id=self.create(values)  
+                    if clientes_all:                            
+                        cliente_id=self.write(values)   
+                    else:
+                        cliente_id=self.create(values)  
 
 class Productos(models.Model):
     _inherit = 'product.template'
