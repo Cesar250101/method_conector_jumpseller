@@ -246,6 +246,7 @@ class Clientes(models.Model):
                                         "street":address,
                                         #"city_id":municipality,
                                         "city":city,
+                                        "jumpseller_custom_id":custom_id,
                                     }                        
                         parent.write(values)
                     i+=1
