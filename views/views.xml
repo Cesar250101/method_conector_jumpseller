@@ -49,7 +49,7 @@
       <field name="inherit_id" ref="product.product_template_only_form_view"/>
       <field name="arch" type="xml">
         <xpath expr="//page[@name='general_information']" position="after">
-          <page name="JumpSeller" string="JumpSeller" groups="product.group_product_variant">
+          <page name="JumpSeller" string="JumpSeller">
               <group>
                 <group name="JumpSeller" string="JumpSeller">
                   <field name="jumpseller_sku"/>  
