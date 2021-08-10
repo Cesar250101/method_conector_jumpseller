@@ -231,16 +231,18 @@ class Clientes(models.Model):
                                     #"city_id":municipality,
                                     "city":city,
                                     "type":type,   
-                                    "jumpseller_custom_id":custom_id,
+                                    #"jumpseller_custom_id":custom_id,
                                     "parent_id":parent_id.id,
                                 }
-                    clientes_all=self.env['res.partner'].search([('street', '=', address)],limit=1)
+                    clientes_all=self.env['res.partner'].search([('street', '=', address),('type','=' , 'invoice')],limit=1)
                     if clientes_all:                        
                         cliente_id=self.write(values)   
                     else:
                         cliente_id=self.create(values)  
                     if i==1:
-                        parent=self.env['res.partner'].search([('id','=',parent_id.id)],limit=1)                     
+                        parent=self.env['res.partner'].search([('jumpseller_custom_id','=',custom_id)],limit=1) 
+                        if parent==False:                    
+                            parent=self.env['res.partner'].search([('email','=',email),('type','=','contact')],limit=1) 
                         values = {
                                         "name": name,
                                         "street":address,
