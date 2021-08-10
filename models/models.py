@@ -60,47 +60,47 @@ class NotasVenta(models.Model):
             json_datos = respuesta.json()
             json_datos_completo += json_datos
             print("Leyendo página", pagina_actual, "...")
-            for pw in json_datos_completo:                 
-                status=pw['order']['status']
+        for pw in json_datos_completo:                 
+            status=pw['order']['status']
                 
-                if status=="Paid":
+            if status=="Paid":
                 
-                    order_id=pw['order']['id']
-                    order_date=pw['order']['completed_at']
-                    order_subtotal=pw['order']['subtotal']
-                    order_tax=pw['order']['tax']
-                    order_total=pw['order']['total']
-                    order_discount=pw['order']['discount']
-                    payment_method_type=pw['order']['payment_method_type']
-                    payment_method_name=pw['order']['payment_method_name']
-                    duplicate_url=pw['order']['duplicate_url']
-                    customer=pw['order']['customer']['id']
-                    shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
-                    billing_address=pw['order']['billing_address']['address']+" "+pw['order']['billing_address']['municipality']
+                order_id=pw['order']['id']
+                order_date=pw['order']['completed_at']
+                order_subtotal=pw['order']['subtotal']
+                order_tax=pw['order']['tax']
+                order_total=pw['order']['total']
+                order_discount=pw['order']['discount']
+                payment_method_type=pw['order']['payment_method_type']
+                payment_method_name=pw['order']['payment_method_name']
+                duplicate_url=pw['order']['duplicate_url']
+                customer=pw['order']['customer']['id']
+                shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
+                billing_address=pw['order']['billing_address']['address']+" "+pw['order']['billing_address']['municipality']
                     
-                    partner_id=self.env['res.partner'].search([('jumpseller_custom_id', '=', customer)],limit=1)
-                    direccion_despacho=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
-                    direccion_facturacion=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
-                    order_all=self.env['sale.order'].search([('jumpseller_order_id', '=', order_id)],limit=1)
-                    productos=pw['order']['products']
+                partner_id=self.env['res.partner'].search([('jumpseller_custom_id', '=', customer)],limit=1)
+                direccion_despacho=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
+                direccion_facturacion=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
+                order_all=self.env['sale.order'].search([('jumpseller_order_id', '=', order_id)],limit=1)
+                productos=pw['order']['products']
                 
-                    if direccion_facturacion:
-                        df=direccion_facturacion.id
-                    else:
-                        df=partner_id.id
+                if direccion_facturacion:
+                    df=direccion_facturacion.id
+                else:
+                    df=partner_id.id
                         
-                    if direccion_despacho:
-                        dd=direccion_despacho.id
-                    else:
-                        dd=partner_id.id
+                if direccion_despacho:
+                    dd=direccion_despacho.id
+                else:
+                    dd=partner_id.id
 
-                    if order_date:
-                        do=order_date
-                    else:
-                        do=datetime.datetime.now()
+                if order_date:
+                    do=order_date
+                else:
+                    do=datetime.datetime.now()
                         
                     
-                    values = {
+                values = {
                                 "name":order_id,
                                 "jumpseller_order_id": order_id,
                                 "date_order":do,
@@ -114,25 +114,25 @@ class NotasVenta(models.Model):
                                 "partner_invoice_id":df,
                                 "jumpseller_status_order":status,
                             }
-                    if order_all:
-                        id_order=self.write(values)
-                        id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)
-                    else:
-                        id_order= self.create(values)
+                if order_all:
+                    id_order=self.write(values)
+                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)
+                else:
+                    id_order= self.create(values)
                 
-                    for p in productos:
-                        producto_id=p['id']                        
-                        producto_sku=p['sku']                        
-                        producto_cantidad=p['qty']
-                        producto_precio=p['price']
-                        producto_dscto=p['discount']
-                        producto_dscto=(producto_dscto/producto_precio)*100
+                for p in productos:
+                    producto_id=p['id']                        
+                    producto_sku=p['sku']                        
+                    producto_cantidad=p['qty']
+                    producto_precio=p['price']
+                    producto_dscto=p['discount']
+                    producto_dscto=(producto_dscto/producto_precio)*100
                         
-                        id_producto=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).id                        
-                        producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).uom_id                        
-                        product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
+                    id_producto=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).id                        
+                    producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).uom_id                        
+                    product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
                         
-                        values = {
+                    values = {
                                 "product_id": product_product_id,
                                 "product_uom_qty":producto_cantidad,
                                 "price_unit": producto_precio,
@@ -140,11 +140,11 @@ class NotasVenta(models.Model):
                                 "order_id":id_order.id,
                                 "product_uom":producto_uom.id,
                             }
-                        linea_detalle=self.env['sale.order.line'].search([('product_id','=',product_product_id)])
-                        if linea_detalle:
-                            id_linea=linea_detalle.write(values)
-                        else:
-                            id_linea=linea_detalle.create(values)
+                    linea_detalle=self.env['sale.order.line'].search([('product_id','=',product_product_id)])
+                    if linea_detalle:
+                        id_linea=linea_detalle.write(values)
+                    else:
+                        id_linea=linea_detalle.create(values)
                         
 
 class Clientes(models.Model):
