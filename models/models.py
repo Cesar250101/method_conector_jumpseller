@@ -84,16 +84,61 @@ class NotasVenta(models.Model):
                 order_all=self.env['sale.order'].search([('jumpseller_order_id', '=', order_id)],limit=1)
                 productos=pw['order']['products']
                 
-                if direccion_facturacion:
-                    df=direccion_facturacion.id
-                else:
-                    df=partner_id.id
-                        
-                if direccion_despacho:
-                    dd=direccion_despacho.id
-                else:
-                    dd=partner_id.id
-
+                if partner_id.id==False:
+                    email=pw['order']['customer']['email']
+                    telefono= pw['order']['customer']['phone']
+                    nombre=pw['order']['billing_address']['name']+" "+pw['order']['billing_address']['surname']
+                    direccion=pw['order']['billing_address']['address']
+                    ciudad=pw['order']['billing_address']['city']
+                    comuna=pw['order']['billing_address']['municipality']
+                    
+                    comuna_id=self.env['res.city'].search([('name','=',comuna)],limit=1)
+                    if comuna_id.id ==False:
+                        values={
+                            'name':comuna,
+                            'country_id':46,
+                            'code':'CL27900'
+                        }
+                        comuna_id=self.env['res.city'].create(values)
+                    values = {
+                                
+                                "name":nombre,
+                                "email": email,
+                                "mobile":telefono,
+                                "street": direccion,
+                                "city": ciudad,
+                                "city_id":comuna_id.id,
+                                'type':'contact',
+                            }
+                    partner_id=partner_id.create(values)
+                
+                if direccion_facturacion.id==False:
+                    values = {
+                                
+                                "name":nombre,
+                                "email": email,
+                                "mobile":telefono,
+                                "street": direccion,
+                                "city": ciudad,
+                                "city_id":comuna_id.id,
+                                'type':'invoice',
+                                'parent_id':partner_id.id
+                            }
+                    direccion_facturacion=self.env['res.partner'].create(values)
+                if direccion_despacho.id==False:
+                    values = {
+                                
+                                "name":nombre,
+                                "email": email,
+                                "mobile":telefono,
+                                "street": direccion,
+                                "city": ciudad,
+                                "city_id":comuna_id.id,
+                                'type':'delivery',
+                                'parent_id':partner_id.id
+                            }
+                    direccion_despacho=self.env['res.partner'].create(values)
+                                    
                 if order_date:
                     do=order_date
                 else:
@@ -110,8 +155,8 @@ class NotasVenta(models.Model):
                                 "jumpseller_payment_method_name":payment_method_name,
                                 "jumpseller_duplicate_url":duplicate_url,
                                 "partner_id":partner_id.id,
-                                "partner_shipping_id":dd,
-                                "partner_invoice_id":df,
+                                "partner_shipping_id":direccion_despacho.id,
+                                "partner_invoice_id":direccion_facturacion.id,
                                 "jumpseller_status_order":status,
                             }
                 if order_all:
@@ -121,7 +166,10 @@ class NotasVenta(models.Model):
                     id_order= self.create(values)
                 
                 for p in productos:
-                    producto_id=p['id']                        
+                    if p['variant_id']==None:
+                        producto_id=p['id']                        
+                    else:
+                        producto_id=p['variant_id']                        
                     producto_sku=p['sku']                        
                     producto_cantidad=p['qty']
                     producto_precio=p['price']
@@ -131,7 +179,7 @@ class NotasVenta(models.Model):
                     id_producto=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).id                        
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
-                        
+
                     values = {
                                 "product_id": product_product_id,
                                 "product_uom_qty":producto_cantidad,
@@ -141,10 +189,9 @@ class NotasVenta(models.Model):
                                 "product_uom":producto_uom.id,
                             }
                     linea_detalle=self.env['sale.order.line'].search([('product_id','=',product_product_id)])
-                    if linea_detalle:
-                        id_linea=linea_detalle.write(values)
-                    else:
+                    if linea_detalle.id==False:
                         id_linea=linea_detalle.create(values)
+                        
                         
 
 class Clientes(models.Model):
@@ -152,163 +199,40 @@ class Clientes(models.Model):
     
     jumpseller_custom_id=fields.Char(string="Id Cliente JumpSeller")
 
-    @api.model
-    def sync_customer_jumpseller(self):
-        login=self.env.user.company_id.jumpseller_login
-        authtoken=self.env.user.company_id.jumpseller_authtoken
-        url_api_clientes_contar = "https://api.jumpseller.com/v1/customers/count.json"
-        url_api_clientes = "https://api.jumpseller.com/v1/customers.json"
-        header_api = {'Content-Type': 'application/json'}
-        # completar con los parámetros API de acceso a la tienda Jumpseller
-        parametros_contar = {"login": login,
-                            "authtoken": authtoken}
-
-        # completar con los parámetros API de acceso a la tienda Jumpseller
-        parametros_clientes = {"login": login,
-                                "authtoken": authtoken,
-                                "limit": "100",
-                                "page": "1"}
-
-
-        # +++++ comienzo +++++
-
-        # obtener la cantidad total de productos y calcular el número de páginas a consultar con requests
-
-        respuesta_contar = requests.get(url_api_clientes_contar, headers=header_api, params=parametros_contar)
-        conteo_productos = respuesta_contar.json()["count"]
-        print("Total de productos:", conteo_productos)
-
-        productos_paginas = math.ceil(conteo_productos / 100)  # 100 productos por página, seleccionado en parámetro limit
-        print("Total de páginas:", productos_paginas)
-
-        # obtener los json con los datos de los productos
-
-        json_datos_completo = []  # lista para almacenar todos los json a descargar con requests
-
-        for pagina_actual in range(1, productos_paginas + 1):
-
-            parametros_clientes["page"] = str(pagina_actual)
-            respuesta = requests.get(url_api_clientes, headers=header_api, params=parametros_clientes)
-            json_datos = respuesta.json()
-            json_datos_completo += json_datos
-            print("Leyendo página", pagina_actual, "...")
-        for pw in json_datos_completo:
-            custom_id=pw['customer']['id']
-            email=pw['customer']['email']
-            phone=pw['customer']['phone']
-            address=""
-                
-            values = {
-                                "name": 'Paso',
-                                #"street":address,
-                                "email": email,
-                                "mobile": phone,
-                                #"city_id":municipality,
-                                #"city":city,
-                                "type":'contact',   
-                                "jumpseller_custom_id":custom_id,
-                            }
-            clientes_1=self.env['res.partner'].search([('email', '=', email),('type','=','contact')],limit=1)
-            if clientes_1:
-                parent_id=self.write(values)
-                parent_id=clientes_1
-            else:
-                parent_id=self.create(values)
-            if parent_id and parent_id != True:
-                direccion_facturacion=pw['customer']['billing_addresses']                
-                i=1
-                for c in direccion_facturacion:
-                    name=c['name']+" "+c['surname']               
-                    city=c['city']
-                    municipality=c['municipality']
-                    address=c['address'] +" "+c['municipality']                    
-                    type="invoice"
-                    values = {
-                                    "name": name,
-                                    "street":address,
-                                    "email": email,
-                                    "mobile": phone,
-                                    #"city_id":municipality,
-                                    "city":city,
-                                    "type":type,   
-                                    #"jumpseller_custom_id":custom_id,
-                                    "parent_id":parent_id.id,
-                                }
-                    clientes_all=self.env['res.partner'].search([('street', '=', address),('type','=' , 'invoice')],limit=1)
-                    if clientes_all:                        
-                        cliente_id=self.write(values)   
-                    else:
-                        cliente_id=self.create(values)  
-                    if i==1:
-                        parent=self.env['res.partner'].search([('jumpseller_custom_id','=',custom_id)],limit=1) 
-                        if parent==False:                    
-                            parent=self.env['res.partner'].search([('email','=',email),('type','=','contact')],limit=1) 
-                        values = {
-                                        "name": name,
-                                        "street":address,
-                                        #"city_id":municipality,
-                                        "city":city,
-                                        "jumpseller_custom_id":custom_id,
-                                    }                        
-                        parent.write(values)
-                    i+=1
-                direccion_envio=pw['customer']['shipping_addresses']
-                for c in direccion_envio:
-                    name=c['name']+" "+c['surname']               
-                    city=c['city']
-                    municipality=c['municipality']
-                    address=c['address']+" "+c['municipality']
-                    type="delivery"
-                    clientes_all=self.env['res.partner'].search([('street', '=', address),('type','=','delivery')],limit=1)
-                    values = {
-                                    "name": name,
-                                    "street":address,
-                                    "email": email,
-                                    "mobile": phone,
-                                    #"city_id":municipality,
-                                    "city":city,
-                                    "type":type,
-                                    "jumpseller_custom_id":custom_id,
-                                    "parent_id":cliente_id,
-                                    "parent_id":parent_id.id,
-                                }
-
-                    if clientes_all:                            
-                        cliente_id=self.write(values)   
-                    else:
-                        cliente_id=self.create(values)  
 
 class Productos(models.Model):
     _inherit = 'product.template'
 
     jumpseller_sku=fields.Char(string="SKU JumpSeller")
-    jumpseller_product_id=fields.Char(string="ID Producto JumpSeller")
+    jumpseller_product_id=fields.Integer(string="ID Producto JumpSeller")
     jumpseller_categ=fields.Char(string="Categoria JumpSeller")
     jumpseller_img=fields.Char(string="Imagen Producto JumpSeller")
-
+    jumpseller_marca=fields.Char(string="Marca Producto")
+    jumpseller_es_variante = fields.Boolean(string='Es Variante en JumpSeller')
+    jumpseller_variente_id=fields.Integer(string="ID Variante JumpSeller")
     
     @api.model
-    def sync_poroduct_jumpseller(self):
+    def sync_product_jumpseller(self):
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
-        url_api_productos_contar = "https://api.jumpseller.com/v1/products/count.json"
-        url_api_productos = "https://api.jumpseller.com/v1/products.json"
+        url_api_products_contar = "https://api.jumpseller.com/v1/products/count.json"
+        url_api_products = "https://api.jumpseller.com/v1/products.json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
                             "authtoken": authtoken}
 
         # completar con los parámetros API de acceso a la tienda Jumpseller
-        parametros_productos = {"login": login,
+        parametros_products = {"login": login,
                                 "authtoken": authtoken,
                                 "limit": "100",
                                 "page": "1"}
 
-        respuesta_contar = requests.get(url_api_productos_contar, headers=header_api, params=parametros_contar)
-        conteo_productos = respuesta_contar.json()["count"]
-        print("Total de productos:", conteo_productos)
+        respuesta_contar = requests.get(url_api_products_contar, headers=header_api, params=parametros_contar)
+        conteo_products = respuesta_contar.json()["count"]
+        print("Total de productos:", conteo_products)
 
-        productos_paginas = math.ceil(conteo_productos / 100)  # 100 productos por página, seleccionado en parámetro limit
+        productos_paginas = math.ceil(conteo_products / 100)  # 100 productos por página, seleccionado en parámetro limit
         print("Total de páginas:", productos_paginas)
 
         # obtener los json con los datos de los productos
@@ -317,44 +241,83 @@ class Productos(models.Model):
 
         for pagina_actual in range(1, productos_paginas + 1):
 
-            parametros_productos["page"] = str(pagina_actual)
-            respuesta = requests.get(url_api_productos, headers=header_api, params=parametros_productos)
+            parametros_products["page"] = str(pagina_actual)
+            respuesta = requests.get(url_api_products, headers=header_api, params=parametros_products)
             json_datos = respuesta.json()
             json_datos_completo += json_datos
             print("Leyendo página", pagina_actual, "...")
-        for pw in json_datos_completo:                
+        for pw in json_datos_completo: 
             sku=pw['product']['sku']
-            id=pw['product']['id']
-            name=pw['product']['name']
-            descripton_sale=pw['product']['meta_description']
-            list_price=pw['product']['price']
-            categoria=pw['product']['categories']
+            products_method=self.env['product.template'].search([('jumpseller_sku','=',sku)],limit=1)
+            if products_method.id==False:
+                products_method=self.env['product.template'].search([('name','=',pw['product']['name'])],limit=1)
             categ=""
-            for c in categoria:
-                categ+=c['name'] +'/'
+            imagen=""
+            for c in pw['product']['categories']:
+                categ+=c['name']+'/'
+            for i in pw['product']['images']:
+                imagen=i['url']
+            values={
+                    'name':pw['product']['name'],
+                    'default_code':pw['product']['sku'],
+                    'jumpseller_sku':pw['product']['sku'],
+                    'jumpseller_product_id':pw['product']['id'],
+                    'jumpseller_categ':categ,
+                    'jumpseller_img':imagen,
+                    'list_price':pw['product']['price'],
+                    'barcode':pw['product']['barcode'],
+                    'description_sale':pw['product']['description'],
+                    'jumpseller_marca':pw['product']['brand'],                    
+                }
+            variants=pw['product']['variants']
+            if variants==False:
+                if products_method.id==False:
+                    product_id=products_method.create(values)
+                else:
+                    product_id=products_method.write(values)
+                    products_method=self.env['product.template'].search([('jumpseller_sku','=',sku)],limit=1)
+                    if products_method.id==False:
+                        products_method=self.env['product.template'].search([('name','=',pw['product']['name'])],limit=1)
+                
+            #Variantes
+            if variants:
+                for v in variants:
+                    opciones=v['options']
+                    atributo=self.env['product.attribute'].search([('name','=',opciones[0]['name'])],limit=1)
+                    if atributo.id==False:
+                        values={
+                                'name':opciones[0]['name'],
+                                'create_variant':'always',
+                                'type':'radio',
+                                'jumpseller_id_atributo':opciones[0]['product_option_id']
+                            }
+                        atributo=self.env['product.attribute'].create(values)
+                    atributo=self.env['product.attribute'].search([('name','=',opciones[0]['name'])],limit=1)
+                    valor=opciones[0]['value']
 
-            imagen=pw['product']['images']
-            for i in imagen:
-                img=i['url']
-            type="product"
-            if sku:
-                productos_all=self.env['product.template'].search([('default_code', '=', sku)],limit=1)
-            else:
-                productos_all=self.env['product.template'].search([('name', '=', name)],limit=1)
-            values = {
-                            "default_code": sku,
-                            "jumpseller_sku":sku,
-                            "jumpseller_product_id":id,
-                            "name": name,
-                            "lst_price": list_price,
-                            "descripton_sale":descripton_sale,
-                            "type":type,
-                            "available_in_pos":True,
-                            'jumpseller_categ':categ,
-                            'jumpseller_img':img,
-                            
-                        }
-            if productos_all:
-                product_id=self.write(values)   
-            else:
-                product_id=self.create(values)   
+                    producto_variante=self.env['product.template'].search([('jumpseller_variente_id','=',v['id'])])
+                    values={
+                                'name':pw['product']['name']+" "+valor ,
+                                'default_code':v['sku'],
+                                'jumpseller_sku':v['sku'],
+                                'jumpseller_product_id':v['id'],
+                                'jumpseller_categ':categ,
+                                'jumpseller_img':imagen,
+                                'list_price':v['price'],
+                                'description_sale':pw['product']['description'],
+                                'jumpseller_marca':pw['product']['brand'],                    
+                                'jumpseller_variente_id':v['id'],
+                                'jumpseller_es_variante':True,
+                                'image_medium':products_method.image_medium,
+                                'image_small':products_method.image_small,
+                            }
+                    if producto_variante.id==False:
+                        producto_variante.create(values)
+                    else:
+                        producto_variante.write(values)
+
+                        
+
+
+    
+    
