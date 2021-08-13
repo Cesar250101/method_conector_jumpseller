@@ -156,7 +156,8 @@ class NotasVenta(models.Model):
                                 "jumpseller_duplicate_url":duplicate_url,
                                 "partner_id":partner_id.id,
                                 "partner_shipping_id":direccion_despacho.id,
-                                "partner_invoice_id":direccion_facturacion.id,
+                                #"partner_invoice_id":direccion_facturacion.id,
+                                "partner_invoice_id":partner_id.id,
                                 "jumpseller_status_order":status,
                             }
                 if order_all:
