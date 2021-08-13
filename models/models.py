@@ -164,9 +164,9 @@ class NotasVenta(models.Model):
                 
                 if order_all.id==False:
                     id_order= self.create(values)
-                else:
-                    id_order=self.write(values)
-                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
+                # else:
+                #     id_order=self.write(values)
+                #     id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
                 
                 for p in productos:
                     if p['variant_id']==None:
