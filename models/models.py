@@ -190,7 +190,7 @@ class NotasVenta(models.Model):
                                 "order_id":id_order.id,
                                 "product_uom":producto_uom.id,
                             }
-                    linea_detalle=self.env['sale.order.line'].search([('product_id','=',product_product_id)])
+                    linea_detalle=self.env['sale.order.line'].search([('order_id','=',id_order),('product_id','=',product_product_id)])
                     if linea_detalle.id==False:
                         if product_product_id!=False:
                             id_linea=linea_detalle.create(values)
