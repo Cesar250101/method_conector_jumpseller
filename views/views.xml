@@ -2,6 +2,19 @@
   <data>
 
     <!-- model.name inherit tree view -->
+    <record id="method_conector_jumpseller.sale.view_sales_order_filter" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.sale.view.sales.order.filter</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+      <field name="arch" type="xml">
+        <xpath expr="//group" position="inside">
+          <field name="jumpseller_payment_method_name" />
+          <filter string="PagoJumpSeller" name="Pago JumpSeller" domain="[]" context="{'group_by':'jumpseller_payment_method_name'}"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- model.name inherit tree view -->
     <record id="method_conector_jumpseller.view_quotation_tree" model="ir.ui.view">
       <field name="name">method.conector.jumpseller.view.quotation.tree</field>
       <field name="model">sale.order</field>
