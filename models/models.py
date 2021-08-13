@@ -161,11 +161,12 @@ class NotasVenta(models.Model):
                                 "partner_invoice_id":partner_id.id,
                                 "jumpseller_status_order":status,
                             }
-                if order_all:
-                    id_order=self.write(values)
-                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)
-                else:
+                
+                if order_all.id==False:
                     id_order= self.create(values)
+                else:
+                    id_order=self.write(values)
+                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
                 
                 for p in productos:
                     if p['variant_id']==None:
