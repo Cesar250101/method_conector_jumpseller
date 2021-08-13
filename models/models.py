@@ -91,7 +91,7 @@ class NotasVenta(models.Model):
                     direccion=pw['order']['billing_address']['address']
                     ciudad=pw['order']['billing_address']['city']
                     comuna=pw['order']['billing_address']['municipality']
-                    
+
                     comuna_id=self.env['res.city'].search([('name','=',comuna)],limit=1)
                     if comuna_id.id ==False:
                         values={
@@ -112,32 +112,32 @@ class NotasVenta(models.Model):
                             }
                     partner_id=partner_id.create(values)
                 
-                if direccion_facturacion.id==False:
-                    values = {
-                                
-                                "name":nombre,
-                                "email": email,
-                                "mobile":telefono,
-                                "street": direccion,
-                                "city": ciudad,
-                                "city_id":comuna_id.id,
-                                'type':'invoice',
-                                'parent_id':partner_id.id
-                            }
-                    direccion_facturacion=self.env['res.partner'].create(values)
-                if direccion_despacho.id==False:
-                    values = {
-                                
-                                "name":nombre,
-                                "email": email,
-                                "mobile":telefono,
-                                "street": direccion,
-                                "city": ciudad,
-                                "city_id":comuna_id.id,
-                                'type':'delivery',
-                                'parent_id':partner_id.id
-                            }
-                    direccion_despacho=self.env['res.partner'].create(values)
+                    if direccion_facturacion.id==False:
+                        values = {
+                                    
+                                    "name":nombre,
+                                    "email": email,
+                                    "mobile":telefono,
+                                    "street": direccion,
+                                    "city": ciudad,
+                                    "city_id":comuna_id.id,
+                                    'type':'invoice',
+                                    'parent_id':partner_id.id
+                                }
+                        direccion_facturacion=self.env['res.partner'].create(values)
+                    if direccion_despacho.id==False:
+                        values = {
+                                    
+                                    "name":nombre,
+                                    "email": email,
+                                    "mobile":telefono,
+                                    "street": direccion,
+                                    "city": ciudad,
+                                    "city_id":comuna_id.id,
+                                    'type':'delivery',
+                                    'parent_id':partner_id.id
+                                }
+                        direccion_despacho=self.env['res.partner'].create(values)
                                     
                 if order_date:
                     do=order_date
