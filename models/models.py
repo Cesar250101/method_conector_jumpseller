@@ -251,7 +251,7 @@ class Productos(models.Model):
             print("Leyendo página", pagina_actual, "...")
         for pw in json_datos_completo: 
             sku=pw['product']['sku']
-            products_method=self.env['product.template'].search([('jumpseller_sku','=',sku)],limit=1)
+            products_method=self.env['product.template'].search([('default_code','=',sku)],limit=1)
             if products_method.id==False:
                 products_method=self.env['product.template'].search([('name','=',pw['product']['name'])],limit=1)
             categ=""
