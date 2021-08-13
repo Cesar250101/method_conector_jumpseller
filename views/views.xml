@@ -9,7 +9,7 @@
       <field name="arch" type="xml">
         <xpath expr="//field[@name='state']" position="after">
           <field name="jumpseller_payment_method_name" />
-        </page>
+        </xpath>
       </field>
     </record>
 
