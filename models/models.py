@@ -273,7 +273,7 @@ class Productos(models.Model):
                     'jumpseller_marca':pw['product']['brand'],                    
                 }
             variants=pw['product']['variants']
-            if variants==False:
+            if not variants:
                 if products_method.id==False:
                     product_id=products_method.create(values)
                 else:
