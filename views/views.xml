@@ -2,8 +2,8 @@
   <data>
 
     <!-- model.name inherit tree view -->
-    <record id="method_conector_jumpseller.sale.view_sales_order_filter" model="ir.ui.view">
-      <field name="name">method.conector.jumpseller.sale.view.sales.order.filter</field>
+    <record id="method_conector_jumpseller.view_sales_order_filter" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.view.sales.order.filter</field>
       <field name="model">sale.order</field>
       <field name="inherit_id" ref="sale.view_sales_order_filter"/>
       <field name="arch" type="xml">
