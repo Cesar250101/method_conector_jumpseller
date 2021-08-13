@@ -1,6 +1,18 @@
 <odoo>
   <data>
 
+    <!-- model.name inherit tree view -->
+    <record id="method_conector_jumpseller.view_quotation_tree" model="ir.ui.view">
+      <field name="name">method.conector.jumpseller.view.quotation.tree</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_quotation_tree"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='state']" position="after">
+          <field name="jumpseller_payment_method_name" />
+        </page>
+      </field>
+    </record>
+
     <!-- model.name inherit form view -->
     <record id="method_conector_jumpseller.view_order_form" model="ir.ui.view">
       <field name="name">method.conector.jumpseller.view.order.form</field>
