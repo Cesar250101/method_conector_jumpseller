@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from odoo.tools import convert
 from odoo import models, fields, api
 import requests
 import math
@@ -213,6 +214,41 @@ class Productos(models.Model):
     jumpseller_marca=fields.Char(string="Marca Producto")
     jumpseller_es_variante = fields.Boolean(string='Es Variante en JumpSeller')
     jumpseller_variente_id=fields.Integer(string="ID Variante JumpSeller")
+
+    @api.model
+    def sync_product_stock_method_jumpseller(self):
+        login=self.env.user.company_id.jumpseller_login
+        authtoken=self.env.user.company_id.jumpseller_authtoken
+        header_api = {'Content-Type': 'application/json'}
+        # completar con los parámetros API de acceso a la tienda Jumpseller
+        parametros_contar = {"login": login,
+                            "authtoken": authtoken}
+
+        # completar con los parámetros API de acceso a la tienda Jumpseller
+        parametros_products = {"login": login,
+                                "authtoken": authtoken,
+                                "limit": "100",
+                                "page": "1"}        
+        
+        producto=self.env['product.template'].search([])
+        for p in producto:
+            product_id_js=str(p.jumpseller_product_id)
+            product_sku_js=str(p.default_code)
+            url_api_products_contar = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
+            data={
+                "product": {
+                'stock': p.qty_available,
+                }}
+            json_a_enviar = data
+            
+            url = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
+            cabeceras_extra = { 
+            'Accept': 'application/xml' 
+            }
+            respuesta = requests.post(url, json=json_a_enviar, headers=header_api,params=parametros_contar)
+
+            
+
     
     @api.model
     def sync_product_jumpseller(self):
