@@ -245,7 +245,7 @@ class Productos(models.Model):
             cabeceras_extra = { 
             'Accept': 'application/xml' 
             }
-            respuesta = requests.post(url, json=json_a_enviar, headers=header_api,params=parametros_contar)
+            respuesta = requests.post(url=url,data=json_a_enviar, headers=header_api,params=parametros_contar)
 
             
 
