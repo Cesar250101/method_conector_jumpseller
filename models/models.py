@@ -314,7 +314,8 @@ class Productos(models.Model):
                     'list_price':pw['product']['price'],
                     'barcode':pw['product']['barcode'],
                     #'description_sale':pw['product']['description'],
-                    'jumpseller_marca':pw['product']['brand'],                    
+                    'jumpseller_marca':pw['product']['brand'],   
+                    'type':'product'                 
                 }
             variants=pw['product']['variants']
             if not variants:
