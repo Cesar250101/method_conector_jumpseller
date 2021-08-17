@@ -7,6 +7,7 @@ import math
 import pandas as pd
 import flatten_json  
 import datetime
+import json
 
 
 class Company(models.Model):
@@ -240,15 +241,18 @@ class Productos(models.Model):
             #     'stock': p.qty_available,
             #     }}
             datadic={
-                'stock': p.qty_available
-                }
+                        "product": {
+                        "stock": p.qty_available,
+                        "stock_unlimited": False,
+                        }
+                    }
         
             
             url = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
             cabeceras_extra = { 
             'Accept': 'application/xml' 
             }
-            respuesta = requests.put(url=url,data=datadic, headers=header_api,params=parametros_contar)
+            respuesta = requests.put(url=url,data=json.dumps(datadic), headers=header_api,params=parametros_contar)
             print(respuesta)
 
             
