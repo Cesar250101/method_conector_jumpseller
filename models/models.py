@@ -235,17 +235,21 @@ class Productos(models.Model):
             product_id_js=str(p.jumpseller_product_id)
             product_sku_js=str(p.default_code)
             url_api_products_contar = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
-            data={
-                "product": {
-                'stock': p.qty_available,
-                }}
-            json_a_enviar = data
+            # datadic={
+            #     'product': {
+            #     'stock': p.qty_available,
+            #     }}
+            datadic={
+                'stock': p.qty_available
+                }
+        
             
             url = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
             cabeceras_extra = { 
             'Accept': 'application/xml' 
             }
-            respuesta = requests.put(url=url,data=json_a_enviar, headers=header_api,params=parametros_contar)
+            respuesta = requests.put(url=url,data=datadic, headers=header_api,params=parametros_contar)
+            print(respuesta)
 
             
 
@@ -305,7 +309,7 @@ class Productos(models.Model):
                     'jumpseller_img':imagen,
                     'list_price':pw['product']['price'],
                     'barcode':pw['product']['barcode'],
-                    'description_sale':pw['product']['description'],
+                    #'description_sale':pw['product']['description'],
                     'jumpseller_marca':pw['product']['brand'],                    
                 }
             variants=pw['product']['variants']
