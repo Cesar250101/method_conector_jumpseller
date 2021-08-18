@@ -171,17 +171,17 @@ class NotasVenta(models.Model):
                 
                 for p in productos:
                     if p['variant_id']==None:
-                        producto_id=p['id']                        
+                        jumpseller_producto_id=p['id']                        
                     else:
-                        producto_id=p['variant_id']                        
+                        jumpseller_producto_id=p['variant_id']                        
                     producto_sku=p['sku']                        
                     producto_cantidad=p['qty']
                     producto_precio=p['price']
                     producto_dscto=p['discount']
                     producto_dscto=(producto_dscto/producto_precio)*100
                         
-                    id_producto=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).id                        
-                    producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',producto_id)],limit=1).uom_id                        
+                    id_producto=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).id                        
+                    producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
 
                     values = {
