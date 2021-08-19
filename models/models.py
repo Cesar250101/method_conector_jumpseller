@@ -356,7 +356,7 @@ class Productos(models.Model):
                                 'jumpseller_categ':categ,
                                 'jumpseller_img':imagen,
                                 'list_price':v['price'],
-                                'description_sale':pw['product']['description'],
+                                #'description_sale':pw['product']['description'],
                                 'jumpseller_marca':pw['product']['brand'],                    
                                 'jumpseller_variente_id':v['id'],
                                 'jumpseller_es_variante':True,
