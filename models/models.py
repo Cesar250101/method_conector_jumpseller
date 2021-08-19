@@ -234,6 +234,9 @@ class Productos(models.Model):
         producto=self.env['product.template'].search([])
         for p in producto:
             product_id_js=str(p.jumpseller_product_id)
+            stock=0
+            if p.qty_available<0:
+                stock=0
             product_sku_js=str(p.default_code)
             url_api_products_contar = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
             # datadic={
@@ -242,7 +245,7 @@ class Productos(models.Model):
             #     }}
             datadic={
                         "product": {
-                        "stock": p.qty_available,
+                        "stock": stock,
                         "stock_unlimited": False,
                         }
                     }
