@@ -196,7 +196,8 @@ class NotasVenta(models.Model):
                     if linea_detalle.id==False:
                         if product_product_id!=False:
                             id_linea=linea_detalle.create(values)
-                        
+                
+                id_order.action_confirm()        
                         
 
 class Clientes(models.Model):
@@ -316,7 +317,7 @@ class Productos(models.Model):
                     'jumpseller_categ':categ,
                     'jumpseller_img':imagen,
                     'list_price':pw['product']['price'],
-                    'barcode':pw['product']['barcode'],
+                    #'barcode':pw['product']['barcode'],
                     #'description_sale':pw['product']['description'],
                     'jumpseller_marca':pw['product']['brand'],   
                     'type':'product'                 
