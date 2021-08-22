@@ -199,8 +199,8 @@ class NotasVenta(models.Model):
                         if product_product_id!=False:
                             id_linea=linea_detalle.create(values)
                 
-                if order_all.id==False:
-                    id_order.action_confirm()        
+
+                id_order.action_confirm()        
 
                         
 
