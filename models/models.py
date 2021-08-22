@@ -56,12 +56,12 @@ class NotasVenta(models.Model):
         json_datos_completo = []  # lista para almacenar todos los json a descargar con requests
 
         for pagina_actual in range(1, productos_paginas + 1):
-
             parametros_orders["page"] = str(pagina_actual)
             respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
             json_datos = respuesta.json()
             json_datos_completo += json_datos
             print("Leyendo página", pagina_actual, "...")
+
         
         for pw in json_datos_completo:                 
             status=pw['order']['status']
@@ -147,30 +147,8 @@ class NotasVenta(models.Model):
                     do=order_date
                 else:
                     do=datetime.datetime.now()
-                        
-                    
-                values = {
-                                "name":order_id,
-                                "jumpseller_order_id": order_id,
-                                "date_order":do,
-                                "amount_untaxed": order_subtotal,
-                                "amount_tax": order_tax,
-                                "amount_total":order_total,
-                                "jumpseller_payment_method_name":payment_method_name,
-                                "jumpseller_duplicate_url":duplicate_url,
-                                "partner_id":partner_id.id,
-                                #"partner_shipping_id":direccion_despacho.id,
-                                "partner_shipping_id":partner_id.id,
-                                #"partner_invoice_id":direccion_facturacion.id,
-                                "partner_invoice_id":partner_id.id,
-                                "jumpseller_status_order":status,
-                            }
-                
-                if order_all.id==False:
-                    id_order= self.create(values)
-                else:
-                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
-                
+                                            
+                order_line=[]                
                 for p in productos:
                     if p['variant_id']==None:
                         jumpseller_producto_id=p['id']                        
@@ -186,21 +164,43 @@ class NotasVenta(models.Model):
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
 
-                    values = {
+                    order_line.append(
+                            (0, 0, {
                                 "product_id": product_product_id,
                                 "product_uom_qty":producto_cantidad,
                                 "price_unit": producto_precio,
                                 "discount": producto_dscto,
-                                "order_id":id_order.id,
-                                "product_uom":producto_uom.id,
-                            }
-                    linea_detalle=self.env['sale.order.line'].search([('order_id','=',id_order.id),('product_id','=',product_product_id)])
-                    if linea_detalle.id==False:
-                        if product_product_id!=False:
-                            id_linea=linea_detalle.create(values)
+                                #"order_id":id_order.id,
+                                "product_uom":producto_uom.id,                            }))
+
+
                 
 
-                id_order.action_confirm()        
+                values = {
+                                "name":order_id,
+                                "jumpseller_order_id": order_id,
+                                "date_order":do,
+                                "amount_untaxed": order_subtotal,
+                                "amount_tax": order_tax,
+                                "amount_total":order_total,
+                                "jumpseller_payment_method_name":payment_method_name,
+                                "jumpseller_duplicate_url":duplicate_url,
+                                "partner_id":partner_id.id,
+                                #"partner_shipping_id":direccion_despacho.id,
+                                "partner_shipping_id":partner_id.id,
+                                #"partner_invoice_id":direccion_facturacion.id,
+                                "partner_invoice_id":partner_id.id,
+                                "jumpseller_status_order":status,
+                                "order_line":order_line,
+                            }
+                
+                if order_all.id==False:
+                    id_order= self.create(values)
+                else:
+                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
+                id_order.action_confirm()
+                
+
 
                         
 
