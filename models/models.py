@@ -41,7 +41,7 @@ class NotasVenta(models.Model):
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_orders = {"login": login,
                                 "authtoken": authtoken,
-                                "limit": "100",
+                                "limit": "10",
                                 "page": "1"}
 
         respuesta_contar = requests.get(url_api_orders_contar, headers=header_api, params=parametros_contar)
@@ -55,13 +55,17 @@ class NotasVenta(models.Model):
 
         json_datos_completo = []  # lista para almacenar todos los json a descargar con requests
 
-        for pagina_actual in range(1, productos_paginas + 1):
+        # for pagina_actual in range(1, productos_paginas + 1):
 
-            parametros_orders["page"] = str(pagina_actual)
-            respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
-            json_datos = respuesta.json()
-            json_datos_completo += json_datos
-            print("Leyendo página", pagina_actual, "...")
+        #     parametros_orders["page"] = str(pagina_actual)
+        #     respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
+        #     json_datos = respuesta.json()
+        #     json_datos_completo += json_datos
+        #     print("Leyendo página", pagina_actual, "...")
+        respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
+        json_datos = respuesta.json()
+        json_datos_completo += json_datos
+        
         for pw in json_datos_completo:                 
             status=pw['order']['status']
                 
@@ -111,6 +115,7 @@ class NotasVenta(models.Model):
                                 "city": ciudad,
                                 "city_id":comuna_id.id,
                                 'type':'contact',
+                                'jumpseller_custom_id':customer,
                             }
                     partner_id=partner_id.create(values)
                 
@@ -368,9 +373,3 @@ class Productos(models.Model):
                         producto_variante.create(values)
                     else:
                         producto_variante.write(values)
-
-                        
-
-
-    
-    
