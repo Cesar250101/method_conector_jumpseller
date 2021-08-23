@@ -323,7 +323,7 @@ class Productos(models.Model):
                     'jumpseller_categ':categ,
                     'jumpseller_img':imagen,
                     'list_price':pw['product']['price'],
-                    #'barcode':pw['product']['barcode'],
+                    'barcode':pw['product']['barcode'],
                     #'description_sale':pw['product']['description'],
                     'jumpseller_marca':pw['product']['brand'],   
                     'type':'product'                 
