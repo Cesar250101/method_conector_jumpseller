@@ -171,7 +171,8 @@ class NotasVenta(models.Model):
                                 "price_unit": producto_precio,
                                 "discount": producto_dscto,
                                 #"order_id":id_order.id,
-                                "product_uom":producto_uom.id,                            }))
+                                "product_uom":producto_uom.id,                            
+                            }))
 
 
                 
@@ -196,9 +197,10 @@ class NotasVenta(models.Model):
                 
                 if order_all.id==False:
                     id_order= self.create(values)
+                    id_order.action_confirm()
                 else:
                     id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
-                id_order.action_confirm()
+
                 
 
 
