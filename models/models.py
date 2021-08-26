@@ -48,10 +48,8 @@ class NotasVenta(models.Model):
 
         respuesta_contar = requests.get(url_api_orders_contar, headers=header_api, params=parametros_contar)
         conteo_ordes = respuesta_contar.json()["count"]
-        print("Total de productos:", conteo_ordes)
 
         productos_paginas = math.ceil(conteo_ordes / 100)  # 100 productos por página, seleccionado en parámetro limit
-        print("Total de páginas:", productos_paginas)
 
         # obtener los json con los datos de los productos
 
@@ -62,7 +60,7 @@ class NotasVenta(models.Model):
             respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
             json_datos = respuesta.json()
             json_datos_completo += json_datos
-            print("Leyendo página", pagina_actual, "...")
+
 
         
         for pw in json_datos_completo:                 
@@ -266,7 +264,6 @@ class Productos(models.Model):
             'Accept': 'application/xml' 
             }
             respuesta = requests.put(url=url,data=json.dumps(datadic), headers=header_api,params=parametros_contar)
-            print(respuesta)
 
             
 
@@ -290,10 +287,8 @@ class Productos(models.Model):
 
         respuesta_contar = requests.get(url_api_products_contar, headers=header_api, params=parametros_contar)
         conteo_products = respuesta_contar.json()["count"]
-        print("Total de productos:", conteo_products)
 
         productos_paginas = math.ceil(conteo_products / 100)  # 100 productos por página, seleccionado en parámetro limit
-        print("Total de páginas:", productos_paginas)
 
         # obtener los json con los datos de los productos
 
@@ -305,7 +300,6 @@ class Productos(models.Model):
             respuesta = requests.get(url_api_products, headers=header_api, params=parametros_products)
             json_datos = respuesta.json()
             json_datos_completo += json_datos
-            print("Leyendo página", pagina_actual, "...")
         for pw in json_datos_completo: 
             sku=pw['product']['sku']
             products_method=self.env['product.template'].search([('default_code','=',sku)],limit=1)
