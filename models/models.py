@@ -29,10 +29,12 @@ class NotasVenta(models.Model):
 
     @api.model
     def sync_sale_order_jumpseller(self):
+        last_id = self.env['sale.order'].search([],order="jumpseller_order_id desc", limit=1).jumpseller_order_id
+        #https://api.jumpseller.com/v1/orders/after/{id}.json
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
         url_api_orders_contar = "https://api.jumpseller.com/v1/orders/count.json"
-        url_api_orders = "https://api.jumpseller.com/v1/orders.json"
+        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(last_id) +"json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
