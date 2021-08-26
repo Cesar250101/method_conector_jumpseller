@@ -101,8 +101,8 @@
                 <page name="jumpseller" string="JumpSeller">
                   <group>
                     <group name="jumpseller" string="JumpSeller"> 
-                      <field name="jumpseller_login"/>
-                      <field name="jumpseller_authtoken"/>
+                      <!--<field name="jumpseller_login"/>
+                      <field name="jumpseller_authtoken"/>-->
                     </group>
                   </group>
                 </page>
