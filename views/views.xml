@@ -20,7 +20,7 @@
       <field name="inherit_id" ref="sale.view_quotation_tree"/>
       <field name="arch" type="xml">
         <xpath expr="//field[@name='state']" position="after">
-          <field name="jumpseller_payment_method_name" />
+          <!--<field name="jumpseller_payment_method_name" />-->
         </xpath>
       </field>
     </record>
@@ -35,10 +35,10 @@
           <page name="JumpSeller" string="JumpSeller">
               <group>
                 <group name="JumpSeller" string="JumpSeller">
-                  <field name="jumpseller_payment_method_name" readonly="1"/>
+                  <!--<field name="jumpseller_payment_method_name" readonly="1"/>
                   <field name="jumpseller_status_order" readonly="1"/>
                   <field name="jumpseller_duplicate_url" readonly="1" widget="url"/>
-                  <field name="jumpseller_order_id" readonly="1"/>
+                  <field name="jumpseller_order_id" readonly="1"/>-->
                   
                 </group>
               </group>
@@ -58,7 +58,7 @@
           <page name="JumpSeller" string="JumpSeller">
               <group>
                 <group name="JumpSeller" string="JumpSeller">
-                  <field name="jumpseller_custom_id"/>                                 
+                  <!--<field name="jumpseller_custom_id"/>                                 -->
                 </group>
               </group>
           </page>
@@ -76,13 +76,13 @@
           <page name="JumpSeller" string="JumpSeller">
               <group>
                 <group name="JumpSeller" string="JumpSeller">
-                  <field name="jumpseller_sku"/>  
+                  <!--<field name="jumpseller_sku"/>  
                    <field name="jumpseller_product_id"/>  
                   <field name="jumpseller_categ"/>   
                   <field name="jumpseller_img" widget="url"/>   
                   <field name="jumpseller_marca"/>   
                   <field name="jumpseller_es_variante"/>   
-                  <field name="jumpseller_variente_id"/>                                                                              
+                  <field name="jumpseller_variente_id"/>-->                                                                              
                 </group>
               </group>
           </page>
