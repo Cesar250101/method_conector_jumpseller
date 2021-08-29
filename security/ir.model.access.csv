@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_method_conector_jumpseller_method_conector_jumpseller,method_conector_jumpseller.method_conector_jumpseller,model_method_conector_jumpseller_method_conector_jumpseller,,1,0,0,0
+access_jupmseller_pago,access.jupmseller.pago,method_conector_jumpseller.model_method_conector_jumpseller_metodopago,account.group_account_manager,1,1,1,1

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from odoo.tools.float_utils import float_split_str
 from odoo.tools import convert
 from odoo import models, fields, api
 import requests
@@ -16,6 +17,31 @@ class Company(models.Model):
     jumpseller_login=fields.Char(string="Longin JumpSeller")
     jumpseller_authtoken=fields.Char(string="Auth Token JumpSeller")
 
+
+
+class PagosJumpSeller(models.Model):
+    _name = 'method_conector_jumpseller.metodopago'
+
+    name = fields.Char(string='Name')
+    journal_id = fields.Many2one(comodel_name='account.journal', string='Diario Pago')
+    
+    
+    
+
+
+class JournalPagosJumpSeller(models.Model):
+    _inherit = 'account.journal'
+
+    jumpseller_metodo_pago = fields.Many2one(comodel_name='method_conector_jumpseller.metodopago', string='Method Pago JumpSeller')
+    jumpseller_metodo_pago_ids = fields.One2many(comodel_name='method_conector_jumpseller.metodopago',
+                                                 inverse_name='journal_id', string='Diario de Pago')
+    
+    jumpseller_facturar_terceros = fields.Boolean(string='Facturar a Terceros')
+    jumpseller_tipo_factura = fields.Many2one(comodel_name='account.journal.sii_document_class', string='Tipo Documento')
+    
+    
+    
+    
 
 
 class NotasVenta(models.Model):
@@ -43,7 +69,7 @@ class NotasVenta(models.Model):
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_orders = {"login": login,
                                 "authtoken": authtoken,
-                                "limit": "100",
+                                "limit": "10",
                                 "page": "1"}
 
         respuesta_contar = requests.get(url_api_orders_contar, headers=header_api, params=parametros_contar)
@@ -61,6 +87,11 @@ class NotasVenta(models.Model):
             json_datos = respuesta.json()
             json_datos_completo += json_datos
 
+        #parametros_orders["page"] = str(pagina_actual)
+        # respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
+        # json_datos = respuesta.json()
+        # json_datos_completo += json_datos
+
 
         
         for pw in json_datos_completo:                 
@@ -76,6 +107,17 @@ class NotasVenta(models.Model):
                 order_discount=pw['order']['discount']
                 payment_method_type=pw['order']['payment_method_type']
                 payment_method_name=pw['order']['payment_method_name']
+                
+                payment_method_id=self.env['method_conector_jumpseller.metodopago'].search([('name','=',payment_method_name)],limit=1)
+                if payment_method_id.id ==False:
+                    values={
+                            'name':payment_method_name,
+                        }
+                    payment_method_id=payment_method_id.create(values)
+                #Buscar journal
+                journal_id=self.env['account.journal'].search([('jumpseller_metodo_pago_ids','=',payment_method_id.id)],limit=1)
+                tipodocto_factura=journal_id.jumpseller_tipo_factura
+                
                 duplicate_url=pw['order']['duplicate_url']
                 customer=pw['order']['customer']['id']
                 shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
@@ -94,7 +136,6 @@ class NotasVenta(models.Model):
                     direccion=pw['order']['billing_address']['address']
                     ciudad=pw['order']['billing_address']['city']
                     comuna=pw['order']['billing_address']['municipality']
-
                     comuna_id=self.env['res.city'].search([('name','=',comuna)],limit=1)
                     if comuna_id.id ==False:
                         values={
@@ -149,6 +190,7 @@ class NotasVenta(models.Model):
                     do=datetime.datetime.now()
                                             
                 order_line=[]                
+                order_line_invoice=[]
                 for p in productos:
                     if p['variant_id']==None:
                         jumpseller_producto_id=p['id']                        
@@ -160,7 +202,13 @@ class NotasVenta(models.Model):
                     producto_dscto=p['discount']
                     producto_dscto=(producto_dscto/producto_precio)*100
                         
-                    id_producto=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).id                        
+                    id_producto=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).id
+                    product=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1)
+                    if product:
+                        product_account_id=product.property_account_expense_id.id
+                        if product_account_id==False:
+                            product_account_id=product.categ_id.property_account_expense_categ_id.id
+                        
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
 
@@ -171,9 +219,22 @@ class NotasVenta(models.Model):
                                 "price_unit": producto_precio,
                                 "discount": producto_dscto,
                                 #"order_id":id_order.id,
-                                "product_uom":producto_uom.id,                            
+                                "product_uom":producto_uom.id,
+                                "name":product_product_id,   
                             }))
 
+                    order_line_invoice.append(
+                            (0, 0, {
+                                "product_id": product_product_id,
+                                "quantity":producto_cantidad,
+                                "price_unit": producto_precio,
+                                "discount": producto_dscto,
+                                #"order_id":id_order.id,
+                                "uom_id":producto_uom.id,
+                                "unmdItem":producto_uom.id,
+                                "name":product_product_id,   
+                                "account_id":product_account_id,
+                            }))
 
                 
 
@@ -198,8 +259,29 @@ class NotasVenta(models.Model):
                 if order_all.id==False:
                     id_order= self.create(values)
                     id_order.action_confirm()
+                    if journal_id.jumpseller_facturar_terceros==False:
+                        if tipodocto_factura.id!=False:
+                            values['journal_document_class_id'] = tipodocto_factura.id
+                            values['document_class_id'] = tipodocto_factura.sii_document_class_id.id
+                            values['journal_id'] = 1
+                            values['origin'] = id_order.name
+                            values['name'] = id_order.id
+                            values['invoice_line_ids'] = order_line_invoice
+                            
+                            factura=self.env['account.invoice'].create(values)
+                            factura.action_invoice_open()
+                            id_order.write=({
+                                'invoice_status':'invoiced',
+                                'invoice_ids':(0, 0,  { factura.id }),
+                            })
                 else:
-                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)                    
+                    id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)      
+                #Valida Salidas de Stock
+                picking_id=self.env['stock.picking'].search([('sale_id','=',id_order.id)],limit=1)
+                picking_id.action_assign()
+                #picking_id.button_validate()
+
+                
 
                 
 

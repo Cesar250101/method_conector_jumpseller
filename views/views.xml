@@ -1,6 +1,43 @@
 <odoo>
   <data>
 
+  <!-- Your Action Window Definition -->
+  <record id="method_conector_jumpseller_metodopago_action" model="ir.actions.act_window">
+      <field name="name">method.conector.jumpseller.metodopago.action</field>
+      <field name="res_model">method_conector_jumpseller.metodopago</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">list,form</field>
+  </record>
+  <!-- Action Menu Item Related To Above Action Window -->
+  <menuitem 
+  action="method_conector_jumpseller_metodopago_action" 
+  id="method_conector_jumpseller_metodopago_menuitem" 
+  parent="sale.menu_sale_config"
+  name="Method Pago JumpSeller" 
+  sequence="1"/>
+
+  <!-- model.name inherit form view -->
+  <record id="method_conector_jumpseller.view_account_journal_form" model="ir.ui.view">
+    <field name="name">method.conector.jumpseller.view.account.journal.form</field>
+    <field name="model">account.journal</field>
+    <field name="inherit_id" ref="account.view_account_journal_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//page[@name='advanced_settings']" position="after">
+          <page name="JumpSeller" string="JumpSeller">
+              <group>
+                <group name="JumpSeller" string="JumpSeller">
+                  <field name="jumpseller_metodo_pago"/>
+                  <field name="jumpseller_metodo_pago_ids" widget="many2many_tags" />
+                  <field name="jumpseller_tipo_factura"/>                  
+                  <field name="jumpseller_facturar_terceros"/>
+                </group>
+              </group>
+          </page>
+        </xpath>
+      
+    </field>
+  </record>
+
     <!-- model.name inherit tree view -->
     <record id="method_conector_jumpseller.view_sales_order_filter" model="ir.ui.view">
       <field name="name">method.conector.jumpseller.view.sales.order.filter</field>
