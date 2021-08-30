@@ -69,7 +69,7 @@ class NotasVenta(models.Model):
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_orders = {"login": login,
                                 "authtoken": authtoken,
-                                "limit": "10",
+                                "limit": "100",
                                 "page": "1"}
 
         respuesta_contar = requests.get(url_api_orders_contar, headers=header_api, params=parametros_contar)
