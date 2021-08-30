@@ -55,7 +55,7 @@ class NotasVenta(models.Model):
 
     @api.model
     def sync_sale_order_jumpseller(self):
-        last_id = self.env['sale.order'].search([],order="jumpseller_order_id desc", limit=1).jumpseller_order_id
+        last_id = self.env['sale.order'].search([('jumpseller_order_id','!=',False)],order="jumpseller_order_id desc", limit=1).jumpseller_order_id
         #https://api.jumpseller.com/v1/orders/after/{id}.json
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
