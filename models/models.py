@@ -9,13 +9,14 @@ import pandas as pd
 import flatten_json  
 import datetime
 import json
-
+from odoo.tools.float_utils import float_compare, float_is_zero, float_round
 
 class Company(models.Model):
     _inherit = 'res.company'
 
     jumpseller_login=fields.Char(string="Longin JumpSeller")
     jumpseller_authtoken=fields.Char(string="Auth Token JumpSeller")
+    jumpseller_location_id = fields.Many2one(comodel_name='stock.location', string='Ubicación Para Descuento', domain="[('usage', '=', 'internal')]")
 
 
 
@@ -24,6 +25,7 @@ class PagosJumpSeller(models.Model):
 
     name = fields.Char(string='Name')
     journal_id = fields.Many2one(comodel_name='account.journal', string='Diario Pago')
+    
     
     
     
@@ -39,9 +41,7 @@ class JournalPagosJumpSeller(models.Model):
     jumpseller_facturar_terceros = fields.Boolean(string='Facturar a Terceros')
     jumpseller_tipo_factura = fields.Many2one(comodel_name='account.journal.sii_document_class', string='Tipo Documento')
     
-    
-    
-    
+        
 
 
 class NotasVenta(models.Model):
@@ -60,7 +60,7 @@ class NotasVenta(models.Model):
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
         url_api_orders_contar = "https://api.jumpseller.com/v1/orders/count.json"
-        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(last_id) +"json"
+        url_api_orders = "https://api.jumpseller.com/v1/orders/after/1819.json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
@@ -87,7 +87,7 @@ class NotasVenta(models.Model):
             json_datos = respuesta.json()
             json_datos_completo += json_datos
 
-        #parametros_orders["page"] = str(pagina_actual)
+        # parametros_orders["page"] = str(pagina_actual)
         # respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
         # json_datos = respuesta.json()
         # json_datos_completo += json_datos
@@ -191,7 +191,7 @@ class NotasVenta(models.Model):
                                             
                 order_line=[]                
                 order_line_invoice=[]
-                for p in productos:
+                for p in productos:                    
                     if p['variant_id']==None:
                         jumpseller_producto_id=p['id']                        
                     else:
@@ -211,6 +211,18 @@ class NotasVenta(models.Model):
                         
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
+                    
+                    #Descuento de Stock
+                    # stock=self.env['stock.quant'].search([('product_tmpl_id','=',id_producto),
+                    #                                       ('company_id','=',self.env.user.company_id.id),
+                    #                                       ('location_id','=',self.env.user.company_id.jumpseller_location_id.id)],limit=1)
+                    # stock_actual=stock.quantity-producto_cantidad
+                    # stock.sudo().write({
+                    #     'quantity':stock_actual
+                    # })
+                    
+                    
+
 
                     order_line.append(
                             (0, 0, {
@@ -270,16 +282,13 @@ class NotasVenta(models.Model):
                             
                             factura=self.env['account.invoice'].create(values)
                             factura.action_invoice_open()
-                            id_order.write=({
+                            id_order.sudo().write=({
                                 'invoice_status':'invoiced',
                                 'invoice_ids':(0, 0,  { factura.id }),
                             })
+                    
                 else:
                     id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)      
-                #Valida Salidas de Stock
-                picking_id=self.env['stock.picking'].search([('sale_id','=',id_order.id)],limit=1)
-                picking_id.action_assign()
-                #picking_id.button_validate()
 
                 
 

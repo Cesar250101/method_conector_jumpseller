@@ -141,6 +141,10 @@
                       <field name="jumpseller_login"/>
                       <field name="jumpseller_authtoken"/>
                     </group>
+                    <group name="jumpseller_location" string="Ubicacion Stock"> 
+                      <field name="jumpseller_location_id"/>
+                    </group>
+
                   </group>
                 </page>
             </xpath>
