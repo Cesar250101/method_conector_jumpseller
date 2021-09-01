@@ -16,7 +16,7 @@ class Company(models.Model):
 
     jumpseller_login=fields.Char(string="Longin JumpSeller")
     jumpseller_authtoken=fields.Char(string="Auth Token JumpSeller")
-    jumpseller_location_id = fields.Many2one(comodel_name='stock.location', string='Ubicación Para Descuento', domain="[('usage', '=', 'internal')]")
+    jumpseller_location_id = fields.Many2one(comodel_name='stock.location', string='Ubicación Para Descuento', domain="[('usage', '=', 'internal')]")    
 
 
 
@@ -332,10 +332,15 @@ class Productos(models.Model):
         producto=self.env['product.template'].search([])
         for p in producto:
             product_id_js=str(p.jumpseller_product_id)            
-            if p.virtual_available<0:
+            stock_ubicacion=self.env['stock.quant'].search([('product_tmpl_id','=',p.id),
+                                                            ('location_id','=',self.env.user.company_id.jumpseller_location_id.id),
+                                                            ('company_id','=',self.env.user.company_id.id)],limit=1)
+            
+            stock_diponible=stock_ubicacion.quantity-stock_ubicacion.reserved_quantity
+            if stock_diponible<0:
                 stock=0
             else:
-                stock=p.virtual_available
+                stock=stock_diponible
             product_sku_js=str(p.default_code)
             url_api_products_contar = "https://api.jumpseller.com/v1/products/" +str(product_id_js)+".json"
             # datadic={
