@@ -11,6 +11,29 @@ import datetime
 import json
 from odoo.tools.float_utils import float_compare, float_is_zero, float_round
 
+    
+
+
+class Factura(models.Model):
+    _inherit = 'account.invoice'
+    
+    ordenes_ids = fields.Many2many(comodel_name='sale.order', string='Notas de Venta')
+    
+    
+    @api.multi
+    def action_invoice_open(self):
+        factura = super(Factura, self).action_invoice_open()
+        for i in self.ordenes_ids:
+            i.sudo().write({
+                'invoice_status':'invoiced',
+                'invoice_ids': self.ordenes_ids,
+            })
+            #i._get_invoiced()            
+            
+        
+    
+    
+
 class Company(models.Model):
     _inherit = 'res.company'
 
@@ -282,7 +305,7 @@ class NotasVenta(models.Model):
                             
                             factura=self.env['account.invoice'].create(values)
                             factura.action_invoice_open()
-                            id_order.sudo().write=({
+                            id_order.sudo().write({
                                 'invoice_status':'invoiced',
                                 'invoice_ids':(0, 0,  { factura.id }),
                             })
