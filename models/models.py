@@ -26,7 +26,7 @@ class Factura(models.Model):
         for i in self.ordenes_ids:
             i.sudo().write({
                 'invoice_status':'invoiced',
-                'invoice_ids': self.ordenes_ids,
+                'invoice_ids': [(4,self.id,False)],
             })
             #i._get_invoiced()            
             
@@ -83,7 +83,7 @@ class NotasVenta(models.Model):
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
         url_api_orders_contar = "https://api.jumpseller.com/v1/orders/count.json"
-        url_api_orders = "https://api.jumpseller.com/v1/orders/after/1819.json"
+        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(last_id) +".json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
@@ -110,7 +110,6 @@ class NotasVenta(models.Model):
             json_datos = respuesta.json()
             json_datos_completo += json_datos
 
-        # parametros_orders["page"] = str(pagina_actual)
         # respuesta = requests.get(url_api_orders, headers=header_api, params=parametros_orders)
         # json_datos = respuesta.json()
         # json_datos_completo += json_datos
@@ -140,7 +139,23 @@ class NotasVenta(models.Model):
                 #Buscar journal
                 journal_id=self.env['account.journal'].search([('jumpseller_metodo_pago_ids','=',payment_method_id.id)],limit=1)
                 tipodocto_factura=journal_id.jumpseller_tipo_factura
+                documento_boleta=self.env['sii.document_class'].search([('sii_code','=','39')],limit=1).id
+                documento_factura=self.env['sii.document_class'].search([('sii_code','=','33')],limit=1).id
+
                 
+                #document_class_boleta=self.env['account.journal.sii_document_class'].search([('sii_document_class_id','=',documento_boleta)],limit=1).id
+                #document_class_factura=self.env['account.journal.sii_document_class'].search([('sii_document_class_id','=',documento_factura)],limit=1).id
+                
+                tipodocto_jumpseller=pw['order']['additional_fields']
+                for t in tipodocto_jumpseller:
+                    if t['label']=='Elige Boleta o Factura':
+                        if t['value']=='Boleta':
+                            tipodocto_method=documento_boleta
+                            document_class_id=self.env['account.journal.sii_document_class'].search([('sii_document_class_id','=',documento_boleta)],limit=1).id
+                        elif t['value']=='Factura':
+                            tipodocto_method=documento_factura
+                            document_class_id=self.env['account.journal.sii_document_class'].search([('sii_document_class_id','=',documento_factura)],limit=1).id
+                        eligio_documento=t['value']
                 duplicate_url=pw['order']['duplicate_url']
                 customer=pw['order']['customer']['id']
                 shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
@@ -155,7 +170,12 @@ class NotasVenta(models.Model):
                 if partner_id.id==False:
                     email=pw['order']['customer']['email']
                     telefono= pw['order']['customer']['phone']
-                    nombre=pw['order']['billing_address']['name']+" "+pw['order']['billing_address']['surname']
+                    if eligio_documento=="Boleta":
+                        nombre=pw['order']['billing_address']['name']+" "+pw['order']['billing_address']['surname']
+                        rut=""
+                    else:
+                        nombre=pw['order']['billing_address']['name']
+                        rut=pw['order']['billing_address']['taxid']
                     direccion=pw['order']['billing_address']['address']
                     ciudad=pw['order']['billing_address']['city']
                     comuna=pw['order']['billing_address']['municipality']
@@ -168,7 +188,7 @@ class NotasVenta(models.Model):
                         }
                         comuna_id=self.env['res.city'].create(values)
                     values = {
-                                
+                                "document_number":rut,
                                 "name":nombre,
                                 "email": email,
                                 "mobile":telefono,
@@ -182,7 +202,7 @@ class NotasVenta(models.Model):
                 
                     if direccion_facturacion.id==False:
                         values = {
-                                    
+                                    "document_number":rut,
                                     "name":nombre,
                                     "email": email,
                                     "mobile":telefono,
@@ -235,17 +255,6 @@ class NotasVenta(models.Model):
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
                     product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
                     
-                    #Descuento de Stock
-                    # stock=self.env['stock.quant'].search([('product_tmpl_id','=',id_producto),
-                    #                                       ('company_id','=',self.env.user.company_id.id),
-                    #                                       ('location_id','=',self.env.user.company_id.jumpseller_location_id.id)],limit=1)
-                    # stock_actual=stock.quantity-producto_cantidad
-                    # stock.sudo().write({
-                    #     'quantity':stock_actual
-                    # })
-                    
-                    
-
 
                     order_line.append(
                             (0, 0, {
@@ -296,15 +305,17 @@ class NotasVenta(models.Model):
                     id_order.action_confirm()
                     if journal_id.jumpseller_facturar_terceros==False:
                         if tipodocto_factura.id!=False:
-                            values['journal_document_class_id'] = tipodocto_factura.id
-                            values['document_class_id'] = tipodocto_factura.sii_document_class_id.id
+                            values['journal_document_class_id'] = document_class_id
+                            values['document_class_id'] = tipodocto_method
                             values['journal_id'] = 1
                             values['origin'] = id_order.name
                             values['name'] = id_order.id
                             values['invoice_line_ids'] = order_line_invoice
                             
                             factura=self.env['account.invoice'].create(values)
-                            factura.action_invoice_open()
+                            if eligio_documento=="Boleta":
+                                factura.action_invoice_open()
+                            
                             id_order.sudo().write({
                                 'invoice_status':'invoiced',
                                 'invoice_ids':(0, 0,  { factura.id }),
