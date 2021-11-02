@@ -77,6 +77,14 @@ class NotasVenta(models.Model):
     
 
     @api.model
+    def cron_cambia_status_facturacion(self):
+        para_factuar=self.env['sale.order'].search([('invoice_status','=','to invoice')])
+        for i in para_factuar:
+            factura=self.env['account.invoice'].search([('origin','=',i.name)])
+            if factura:
+                i.invoice_status='invoiced'
+
+    @api.model
     def sync_sale_order_jumpseller(self):
         last_id = self.env['sale.order'].search([('jumpseller_order_id','!=',False)],order="jumpseller_order_id desc", limit=1).jumpseller_order_id
         #https://api.jumpseller.com/v1/orders/after/{id}.json
