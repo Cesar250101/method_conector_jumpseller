@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import base64
 from odoo.tools.float_utils import float_split_str
 from odoo.tools import convert
 from odoo import models, fields, api
@@ -10,7 +11,7 @@ import flatten_json
 import datetime
 import json
 from odoo.tools.float_utils import float_compare, float_is_zero, float_round
-
+from odoo.tools import image
     
 
 
@@ -91,7 +92,7 @@ class NotasVenta(models.Model):
         login=self.env.user.company_id.jumpseller_login
         authtoken=self.env.user.company_id.jumpseller_authtoken
         url_api_orders_contar = "https://api.jumpseller.com/v1/orders/count.json"
-        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(last_id) +".json"
+        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(2900) +".json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
@@ -449,8 +450,10 @@ class Productos(models.Model):
                 categ+=c['name']+'/'
             for i in pw['product']['images']:
                 imagen=i['url']
+                imagen_base64 = base64.b64encode(requests.get(imagen.replace('\/', '/')).content)
             values={
                     'name':pw['product']['name'],
+                    'image_medium':imagen_base64,
                     'default_code':pw['product']['sku'],
                     'jumpseller_sku':pw['product']['sku'],
                     'jumpseller_product_id':pw['product']['id'],
@@ -491,6 +494,7 @@ class Productos(models.Model):
                     producto_variante=self.env['product.template'].search([('jumpseller_variente_id','=',v['id'])])
                     values={
                                 'name':pw['product']['name']+" "+valor ,
+                                'image_medium':imagen_base64,
                                 'default_code':v['sku'],
                                 'jumpseller_sku':v['sku'],
                                 'jumpseller_product_id':v['id'],
