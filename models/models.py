@@ -433,8 +433,8 @@ class Productos(models.Model):
 
         json_datos_completo = []  # lista para almacenar todos los json a descargar con requests
 
-        #for pagina_actual in range(1, productos_paginas + 1):
-        for pagina_actual in range(1, 4):
+        for pagina_actual in range(1, productos_paginas + 1):
+        # for pagina_actual in range(1, 4):
             parametros_products["page"] = str(pagina_actual)
             respuesta = requests.get(url_api_products, headers=header_api, params=parametros_products)
             json_datos = respuesta.json()
