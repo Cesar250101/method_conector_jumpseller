@@ -105,7 +105,7 @@
     </record>
 
     <!-- model.name inherit form view -->
-    <record id="method_conector_jumpseller.view_partner_form" model="ir.ui.view">
+    <!-- <record id="method_conector_jumpseller.view_partner_form" model="ir.ui.view">
       <field name="name">method.conector.jumpseller.view.partner.form</field>
       <field name="model">res.partner</field>
       <field name="inherit_id" ref="base.view_partner_form"/>
@@ -120,7 +120,7 @@
           </page>
         </xpath>
       </field>
-    </record>
+    </record> -->
 
     <!-- model.name inherit form view -->
     <record id="method_conector_jumpseller.product_template_only_form_view" model="ir.ui.view">
