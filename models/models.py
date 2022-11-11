@@ -449,8 +449,12 @@ class Productos(models.Model):
             for c in pw['product']['categories']:
                 categ+=c['name']+'/'
             for i in pw['product']['images']:
-                imagen=i['url']
-                imagen_base64 = base64.b64encode(requests.get(imagen.replace('\/', '/')).content)
+                try:
+                    imagen=i['url']
+                    imagen_base64 = base64.b64encode(requests.get(imagen.replace('\/', '/')).content)
+                except:
+                    imagen_base64=""
+                    pass
             values={
                     'name':pw['product']['name'],
                     'image_medium':imagen_base64,
@@ -470,7 +474,12 @@ class Productos(models.Model):
                 if products_method.id==False:
                     product_id=products_method.create(values)
                 else:
-                    product_id=products_method.write(values)
+                    try:
+                        product_id=products_method.write(values)
+                    except:
+                        del values['image_medium']
+                        product_id=products_method.write(values)
+
                     products_method=self.env['product.template'].search([('jumpseller_sku','=',sku)],limit=1)
                     if products_method.id==False:
                         products_method=self.env['product.template'].search([('name','=',pw['product']['name'])],limit=1)
