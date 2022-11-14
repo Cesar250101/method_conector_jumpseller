@@ -41,6 +41,7 @@ class Company(models.Model):
     jumpseller_login=fields.Char(string="Longin JumpSeller")
     jumpseller_authtoken=fields.Char(string="Auth Token JumpSeller")
     jumpseller_location_id = fields.Many2one(comodel_name='stock.location', string='Ubicación Para Descuento', domain="[('usage', '=', 'internal')]")    
+    facturacion = fields.Boolean('Factura Automática?')
 
 
 
@@ -90,9 +91,10 @@ class NotasVenta(models.Model):
         last_id = self.env['sale.order'].search([('jumpseller_order_id','!=',False)],order="jumpseller_order_id desc", limit=1).jumpseller_order_id
         #https://api.jumpseller.com/v1/orders/after/{id}.json
         login=self.env.user.company_id.jumpseller_login
+        factura_automatica=self.env.user.company_id.facturacion
         authtoken=self.env.user.company_id.jumpseller_authtoken
         url_api_orders_contar = "https://api.jumpseller.com/v1/orders/count.json"
-        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(2900) +".json"
+        url_api_orders = "https://api.jumpseller.com/v1/orders/after/"+ str(last_id) +".json"
         header_api = {'Content-Type': 'application/json'}
         # completar con los parámetros API de acceso a la tienda Jumpseller
         parametros_contar = {"login": login,
@@ -157,7 +159,7 @@ class NotasVenta(models.Model):
                 
                 tipodocto_jumpseller=pw['order']['additional_fields']
                 for t in tipodocto_jumpseller:
-                    if t['label']=='Elige Boleta o Factura':
+                    if t['label']=='Boleta o Factura':
                         if t['value']=='Boleta':
                             tipodocto_method=documento_boleta
                             document_class_id=self.env['account.journal.sii_document_class'].search([('sii_document_class_id','=',documento_boleta)],limit=1).id
@@ -312,23 +314,24 @@ class NotasVenta(models.Model):
                 if order_all.id==False:
                     id_order= self.create(values)
                     id_order.action_confirm()
-                    if journal_id.jumpseller_facturar_terceros==False:
-                        if tipodocto_factura.id!=False:
-                            values['journal_document_class_id'] = document_class_id
-                            values['document_class_id'] = tipodocto_method
-                            values['journal_id'] = 1
-                            values['origin'] = id_order.name
-                            values['name'] = id_order.id
-                            values['invoice_line_ids'] = order_line_invoice
-                            
-                            factura=self.env['account.invoice'].create(values)
-                            if eligio_documento=="Boleta":
-                                factura.action_invoice_open()
-                            
-                            id_order.sudo().write({
-                                'invoice_status':'invoiced',
-                                'invoice_ids':(0, 0,  { factura.id }),
-                            })
+                    if factura_automatica:
+                        if journal_id.jumpseller_facturar_terceros==False:
+                            if tipodocto_factura.id!=False:
+                                values['journal_document_class_id'] = document_class_id
+                                values['document_class_id'] = tipodocto_method
+                                values['journal_id'] = 1
+                                values['origin'] = id_order.name
+                                values['name'] = id_order.id
+                                values['invoice_line_ids'] = order_line_invoice
+                                
+                                factura=self.env['account.invoice'].create(values)
+                                if eligio_documento=="Boleta":
+                                    factura.action_invoice_open()
+                                
+                                id_order.sudo().write({
+                                    'invoice_status':'invoiced',
+                                    'invoice_ids':(0, 0,  { factura.id }),
+                                })
                     
                 else:
                     id_order=self.search([('jumpseller_order_id','=',order_id)],limit=1)      
@@ -374,7 +377,9 @@ class Productos(models.Model):
         
         producto=self.env['product.template'].search([])
         for p in producto:
-            product_id_js=str(p.jumpseller_product_id)            
+            product_id_js=str(p.jumpseller_product_id)  
+            precio_venta=round((p.list_price*1.02),0)
+
             stock_ubicacion=self.env['stock.quant'].search([('product_tmpl_id','=',p.id),
                                                             ('location_id','=',self.env.user.company_id.jumpseller_location_id.id),
                                                             ('company_id','=',self.env.user.company_id.id)],limit=1)
@@ -394,6 +399,7 @@ class Productos(models.Model):
                         "product": {
                         "stock": stock,
                         "stock_unlimited": False,
+                        "price": precio_venta,
                         }
                     }
         

@@ -162,6 +162,8 @@
                     </group>
                     <group name="jumpseller_location" string="Ubicacion Stock"> 
                       <field name="jumpseller_location_id"/>
+                      <field name="facturacion"/>
+                      
                     </group>
 
                   </group>
