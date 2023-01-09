@@ -169,9 +169,13 @@ class NotasVenta(models.Model):
                         eligio_documento=t['value']
                 duplicate_url=pw['order']['duplicate_url']
                 customer=pw['order']['customer']['id']
-                shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
-                billing_address=pw['order']['billing_address']['address']+" "+pw['order']['billing_address']['municipality']
-                    
+                if pw['order']['shipping_address']!=None:
+                    shipping_address= pw['order']['shipping_address']['address']+" "+pw['order']['shipping_address']['municipality']
+                    billing_address=pw['order']['billing_address']['address']+" "+pw['order']['billing_address']['municipality']
+                else:
+                    shipping_address=""
+                    billing_address=""
+
                 partner_id=self.env['res.partner'].search([('jumpseller_custom_id', '=', customer)],limit=1)
                 direccion_despacho=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
                 direccion_facturacion=self.env['res.partner'].search([('street', '=', shipping_address)],limit=1)
@@ -264,30 +268,30 @@ class NotasVenta(models.Model):
                             product_account_id=product.categ_id.property_account_expense_categ_id.id
                         
                     producto_uom=self.env['product.template'].search([('jumpseller_product_id','=',jumpseller_producto_id)],limit=1).uom_id                        
-                    product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1).id                        
+                    product_product_id=self.env['product.product'].search([('product_tmpl_id','=',id_producto)],limit=1)                      
                     
 
                     order_line.append(
                             (0, 0, {
-                                "product_id": product_product_id,
+                                "product_id": product_product_id.id,
                                 "product_uom_qty":producto_cantidad,
                                 "price_unit": producto_precio,
                                 "discount": producto_dscto,
                                 #"order_id":id_order.id,
                                 "product_uom":producto_uom.id,
-                                "name":product_product_id,   
+                                "name":product_product_id.product_tmpl_id.name,   
                             }))
 
                     order_line_invoice.append(
                             (0, 0, {
-                                "product_id": product_product_id,
+                                "product_id": product_product_id.id,
                                 "quantity":producto_cantidad,
                                 "price_unit": producto_precio,
                                 "discount": producto_dscto,
                                 #"order_id":id_order.id,
                                 "uom_id":producto_uom.id,
                                 "unmdItem":producto_uom.id,
-                                "name":product_product_id,   
+                                "name":product_product_id.product_tmpl_id.name,   
                                 "account_id":product_account_id,
                             }))
 
