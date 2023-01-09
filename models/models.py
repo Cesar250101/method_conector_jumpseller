@@ -375,7 +375,7 @@ class Productos(models.Model):
                                 "limit": "100",
                                 "page": "1"}        
         
-        producto=self.env['product.template'].search([])
+        producto=self.env['product.template'].search([('jumpseller_product_id','!=',0)])
         for p in producto:
             product_id_js=str(p.jumpseller_product_id)  
             precio_venta=round((p.list_price*1.02),0)
