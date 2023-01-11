@@ -382,7 +382,7 @@ class Productos(models.Model):
         producto=self.env['product.template'].search([('jumpseller_product_id','!=',0)])
         for p in producto:
             product_id_js=str(p.jumpseller_product_id)  
-            precio_venta=round((p.list_price*1.02),0)
+            precio_venta=round((p.list_price*1.12),0)
 
             stock_ubicacion=self.env['stock.quant'].search([('product_tmpl_id','=',p.id),
                                                             ('location_id','=',self.env.user.company_id.jumpseller_location_id.id),
