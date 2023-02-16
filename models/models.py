@@ -42,7 +42,7 @@ class Company(models.Model):
     jumpseller_authtoken=fields.Char(string="Auth Token JumpSeller")
     jumpseller_location_id = fields.Many2one(comodel_name='stock.location', string='Ubicación Para Descuento', domain="[('usage', '=', 'internal')]")    
     facturacion = fields.Boolean('Factura Automática?')
-
+    lista_precio_id = fields.Many2one(comodel_name='product.pricelist', string='Lista de Precios')
 
 
 class PagosJumpSeller(models.Model):
@@ -380,9 +380,15 @@ class Productos(models.Model):
                                 "page": "1"}        
         
         producto=self.env['product.template'].search([('jumpseller_product_id','!=',0)])
+        for i in self.env.user.company_id.lista_precio_id.item_ids:
+            dscto_recargo=i.price_discount
+        if dscto_recargo<0:
+            factor=1+((dscto_recargo/100)*-1)
+        else:
+            factor=1-(dscto_recargo/100)
         for p in producto:
             product_id_js=str(p.jumpseller_product_id)  
-            precio_venta=round((p.list_price*1.12),0)
+            precio_venta=round((p.list_price*factor),0)
 
             stock_ubicacion=self.env['stock.quant'].search([('product_tmpl_id','=',p.id),
                                                             ('location_id','=',self.env.user.company_id.jumpseller_location_id.id),
