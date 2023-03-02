@@ -12,20 +12,7 @@
             <field name="state">code</field>
             <field name="code">model.sync_product_stock_method_jumpseller()</field>
             <field name="active" eval="True" />
-        </record>    
-
-
-        <!--Sync Productos a JumpSeller-->
-        <record id="method_conector_jumpseller.ir_cron_sync_product" model="ir.cron">
-            <field name="name">Jumpseller - Sync Productos as JS</field>
-            <field name="interval_number">1</field>
-            <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-            <field name="model_id" ref="product.model_product_template" />
-            <field name="state">code</field>
-            <field name="code">model.sync_product_jumpseller()</field>
-            <field name="active" eval="True" />
-        </record>    
+        </record>      
 
         <!--Sync Ordenes a Method desde JumpSeller-->
         <record id="method_conector_jumpseller.ir_cron_sync_order" model="ir.cron">
