@@ -473,7 +473,7 @@ class Productos(models.Model):
                     pass
             values={
                     'name':pw['product']['name'],
-                    'image_medium':imagen_base64,
+                    # 'image_medium':imagen_base64,
                     'default_code':pw['product']['sku'],
                     'jumpseller_sku':pw['product']['sku'],
                     'jumpseller_product_id':pw['product']['id'],
